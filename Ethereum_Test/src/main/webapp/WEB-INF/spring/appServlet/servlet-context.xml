@@ -20,6 +20,9 @@
 	<beans:bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
 		<beans:property name="order" value="0" />
 	</beans:bean>
+	
+	<!-- Service -->
+	<beans:bean id="homeService" class="com.ethe.home.sevice.HomeServiceImpl"/>
  
 	<!-- JSP View Resolver -->
 	<beans:bean
@@ -35,5 +38,5 @@
  
  	<!-- JSON View Resolver -->
 	<beans:bean name="jsonView" class="net.sf.json.spring.web.servlet.view.JsonView" />
-	<context:component-scan base-package="com.ethe.test" />
+	<context:component-scan base-package="com.ethe.home" />
 </beans:beans>

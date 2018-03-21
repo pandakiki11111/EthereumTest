@@ -1,4 +1,4 @@
-package com.ethe.test;
+package com.ethe.home;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -8,17 +8,22 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.ethe.home.sevice.HomeServiceImpl;
+
 /**
  * Handles requests for the application home page.
  */
 @Controller
 public class HomeController {
+	@Autowired
+	HomeServiceImpl homeService;
 	
 	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 	
@@ -44,13 +49,13 @@ public class HomeController {
 		logger.info("make new Account");
 		
 		ModelAndView mv = new ModelAndView();
-		
 		Map<String, String> map = new HashMap<String, String>();
 		
 		map.put("test", "test");
 		
 		mv.setViewName("jsonView");
 		mv.addObject(map);
+		mv.addObject(homeService.newAccount());
 
 		return mv;
 	}
