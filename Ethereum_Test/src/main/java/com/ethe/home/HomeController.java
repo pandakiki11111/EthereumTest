@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,13 +52,29 @@ public class HomeController {
 		logger.info("make new Account");
 		
 		ModelAndView mv = new ModelAndView();
-		Map<String, String> map = new HashMap<String, String>();
-		
-		map.put("test", "test");
-		
 		mv.setViewName("jsonView");
-		mv.addObject(map);
-		mv.addObject(homeService.newAccount());
+		
+		mv.addObject(homeService.newAccount("ethe"));
+
+		return mv;
+	}
+	
+	@RequestMapping(value = "/GetBalance", method = RequestMethod.GET)
+	public ModelAndView getBalance(Model model, HttpServletRequest request){
+		logger.info("get Balance");
+		
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("jsonView");
+		
+//		Map<String, String> paramMap = request.getParameterMap();
+		
+		Map<String, String> paramMap = new HashMap<String, String>();
+		
+		paramMap.put("coinname", "monero");
+		
+		homeService.getBalance(paramMap);
+		
+		mv.addObject(paramMap);
 
 		return mv;
 	}

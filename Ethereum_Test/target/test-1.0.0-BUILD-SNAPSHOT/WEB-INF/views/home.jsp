@@ -6,11 +6,15 @@
 <head>
 	<title>Home</title>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-	<script type="text/javascript" src="./WEB-INF/js/bignumber.js"></script>
-	<script type="text/javascript" src="/WEB-INF/js/crypto-js.js"></script>
-	<script type="text/javascript" src="../js/utf8.js"></script>
+	<script type="text/javascript" src="/js/bignumber.js"></script>
+	<script type="text/javascript" src="/js/crypto-js.js"></script>
+	<script type="text/javascript" src="/js/utf8.js"></script>
 	<script type="text/javascript" src="/js/web3.js"></script>
-	<script type="text/javascript" src="./js/require.js"></script>
+	<script type="text/javascript" src="/js/require.js"></script>
+	
+	<script type="text/javascript">
+		var url = 
+	</script>
 </head>
 <body>
 <h1>

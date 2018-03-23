@@ -123,7 +123,7 @@
 		    <artifactId>json-lib-ext-spring</artifactId>
 		    <version>1.0.2</version>
 		</dependency>
-		   
+		
 		<dependency>
 		    <groupId>org.json</groupId>
 		    <artifactId>json</artifactId>
@@ -149,6 +149,19 @@
 		  <groupId>org.web3j</groupId>
 		  <artifactId>core</artifactId>
 		  <version>3.3.1</version>
+		</dependency>
+		
+		<!-- jsonrpc4j -->
+		<dependency>
+			<groupId>com.github.briandilley.jsonrpc4j</groupId>
+			<artifactId>jsonrpc4j</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.codehaus.jackson</groupId>
+		    <artifactId>jackson-mapper-asl</artifactId>
+		    <version>1.9.13</version>
 		</dependency>
 		
 	</dependencies>
