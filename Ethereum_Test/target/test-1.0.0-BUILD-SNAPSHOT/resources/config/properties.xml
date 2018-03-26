@@ -26,6 +26,6 @@
 		RPC: 18081 for the mainnet, 28081 for the testnet
      -->
     <entry key="monero.ip">http://119.207.78.154</entry>
-    <entry key="monero.port">18080</entry>
+    <entry key="monero.port">28081</entry>
     
 </properties>

@@ -11,10 +11,6 @@
 	<script type="text/javascript" src="/js/utf8.js"></script>
 	<script type="text/javascript" src="/js/web3.js"></script>
 	<script type="text/javascript" src="/js/require.js"></script>
-	
-	<script type="text/javascript">
-		var url = 
-	</script>
 </head>
 <body>
 <h1>

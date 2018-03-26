@@ -1,17 +1,35 @@
 package com.ethe.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Wallet;
 import org.web3j.crypto.WalletFile;
 
+import com.ethe.home.properties.Properties;
+
 public class Util {
+	
+	@Autowired(required=true)
+	static
+	Properties props;
 	
 	/** 
 	 * address 와 password 를 수동으로 생성
@@ -46,64 +64,49 @@ public class Util {
        return processJson;
 	}
 	
+	public static String request(String string_url, String params,  HashMap<String, String> headers){
+		
+		 String response = "";
+		
+		try {
+			
+			URL url = new URL(string_url);
+			URLConnection con = url.openConnection();
+			HttpURLConnection http = (HttpURLConnection)con;
+			http.setRequestMethod("POST");
+			http.setDoOutput(true);
+			
+			byte[] out = params.getBytes(StandardCharsets.UTF_8);
+			int length = out.length;
 
-	/**
-	 * http request 요청
-	 */
-	public static String request(String strHost, String strMemod, HashMap<String, Object> rgParams,  HashMap<String, String> httpHeaders) {
-    	String response = "";
-
-		// SSL
-		if (strHost.startsWith("https://")) {
-		    HttpRequest request = HttpRequest.get(strHost);
-		    // Accept all certificates
-		    request.trustAllCerts();
-		    // Accept all hostnames
-		    request.trustAllHosts();
-		}
-	
-		if (strMemod.toUpperCase().equals("HEAD")) {
-		} else {
-		    HttpRequest request = null;
-	
-		    // POST/GET
-		    if (strMemod.toUpperCase().equals("POST")) {
-				request = new HttpRequest(strHost, "POST");
-				request.readTimeout(300000);
-				request.contentType("application/json-rpc");
-		
-				System.out.println("POST ==> " + request.url());
-		
-				if (httpHeaders != null && !httpHeaders.isEmpty()) {
-				    request.headers(httpHeaders);
-				    System.out.println(httpHeaders.toString());
-				}
-				
-				System.out.println("content type => "+request.contentType());
-				
-				if (rgParams != null && !rgParams.isEmpty()) {
-				    request.form(rgParams);
-				    System.out.println(rgParams.toString());
-				}
-		    } else {
-				request = HttpRequest.get(strHost
-					+ mapToQueryString(rgParams));
-				request.readTimeout(10000);
-		
-				System.out.println("Response was: " + response);
+			http.setFixedLengthStreamingMode(length);
+			http.setRequestProperty("Content-Type", "application/json-rpc; charset=UTF-8");
+			http.connect();
+			try(OutputStream os = http.getOutputStream()) {
+			    os.write(out);
+			}
+			
+			InputStream in = http.getInputStream();
+			
+			StringBuilder textBuilder = new StringBuilder();
+		    try (Reader reader = new BufferedReader(new InputStreamReader(in, Charset.forName(StandardCharsets.UTF_8.name())))) {
+		        int c = 0;
+		        while ((c = reader.read()) != -1) {
+		            textBuilder.append((char) c);
+		        }
 		    }
 		    
-		    if (request.ok()) {
-			response = request.body();
-		    } else {
-			response = "error : " + request.code() + ", message : "
-				+ request.body();
-		    }
-		    request.disconnect();
+		    response = textBuilder.toString();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			
 		}
-	
+		
 		return response;
-    }
+	}
 	
 	/**
 	 * map 을 query 문자로 변경
@@ -124,4 +127,22 @@ public class Util {
 	
 		return string.toString();
     }
+	
+	public static Map<String, String> coinNameCheck(Map<String, String> map){
+		
+		if(map.isEmpty()){
+			map.put("status", "error");
+			map.put("error_message", "parameter is empty");
+		}else if(!map.containsKey("coinname")){
+			map.put("status", "error");
+			map.put("error_message", "coinname is empty");
+		}else if(props.getCoinNames().contains(map.get("coinname").toUpperCase())){
+			map.put("status", "error");
+			map.put("error_message", "coinname is invalid");
+		}else{
+			map.put("status", "success");
+		}
+		
+		return map;
+	}
 }

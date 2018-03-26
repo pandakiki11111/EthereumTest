@@ -30,10 +30,8 @@ public class HomeController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 	
-	/**
-	 * Simply selects the home view to render by returning its name.
-	 */
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	//simple jsp test page
+	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public String home(Locale locale, Model model) {
 		logger.info("Welcome home! The client locale is {}.", locale);
 		
@@ -47,18 +45,19 @@ public class HomeController {
 		return "home";
 	}
 	
-	@RequestMapping(value = "/createUser", method = RequestMethod.POST)
-	public ModelAndView newAccount(Model model){
+	@RequestMapping(value = "/GetNewAccount", method = RequestMethod.POST)
+	public ModelAndView newAccount(Model model, HttpServletRequest request){
 		logger.info("make new Account");
 		
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("jsonView");
 		
-		mv.addObject(homeService.newAccount("ethe"));
+		mv.addObject(homeService.newAccount(request.getParameterMap()));
 
 		return mv;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/GetBalance", method = RequestMethod.GET)
 	public ModelAndView getBalance(Model model, HttpServletRequest request){
 		logger.info("get Balance");
@@ -66,15 +65,7 @@ public class HomeController {
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("jsonView");
 		
-//		Map<String, String> paramMap = request.getParameterMap();
-		
-		Map<String, String> paramMap = new HashMap<String, String>();
-		
-		paramMap.put("coinname", "monero");
-		
-		homeService.getBalance(paramMap);
-		
-		mv.addObject(paramMap);
+		mv.addObject(homeService.getBalance(request.getParameterMap()));
 
 		return mv;
 	}

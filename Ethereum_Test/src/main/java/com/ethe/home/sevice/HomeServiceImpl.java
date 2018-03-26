@@ -1,15 +1,10 @@
 package com.ethe.home.sevice;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
@@ -23,9 +18,6 @@ import org.web3j.protocol.http.HttpService;
 
 import com.ethe.util.Util;
 import com.ethe.home.properties.Properties;
-import com.ethe.util.HttpRequest;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
 @Service("homeService")
 public class HomeServiceImpl implements HomeService{
@@ -34,20 +26,23 @@ public class HomeServiceImpl implements HomeService{
 	Properties props;
 	
 	@Override
-	public Map<String, String> newAccount(String coinname) {
-		// TODO Auto-generated method stub
+	public Map<String, String> newAccount(Map<String, String> paramMap) {
 		
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<String,String>();
 		
-		map.put("status", "0");
+		if("error".equals(Util.coinNameCheck(paramMap).get("status"))){
+			return paramMap;
+		}
 		
-		if("ethe".equals(coinname)) etheNewAccount(map);
-//		if("monera".equals(coinname)) moneraNewAccount(map);
+		String coinname = paramMap.get("coinname").toUpperCase();
+		
+		if(props.COIN_ETH.equals(coinname)) etheNewAccount(map);
+//		if(props.COIN_MON.equals(coinname)) moneraNewAccount(map);
 		
 		return map;
 	}
 	
-	public List<Map<String, String>> accountList() {
+	public List<Map<String, String>> accountList(Map<String, String> paramMap) {
 		
 		List<Map<String, String>> resultList = new ArrayList<>();
 		
@@ -80,64 +75,29 @@ public class HomeServiceImpl implements HomeService{
 	
 	@SuppressWarnings("unchecked")
 	private void getMoneroBalance(Map<String, String> paramMap) {
+		JSONObject jsonParams = new JSONObject();
 		
-//		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//		
-//		try {
-//			//방안 1
-//			Map<String, String> headers = new HashMap<>();
-//			headers.put("Access-Control-Allow-Origin", "*");
-//	        
-//			JsonRpcHttpClient jrac = new JsonRpcHttpClient(new URL(dao.getMonero_url()+"/json_rpc"), headers);
-//			jrac.setContentType("application/json");
-//			String param = "{'jsonrpc':'2.0','id':'0','method':'getbalance'}";
-//			
-//			jrac.invoke("post",new Object[] {param}, byteArrayOutputStream);
-//
-//			JsonNode node = jrac.getObjectMapper().readTree(byteArrayOutputStream.toString(StandardCharsets.UTF_8.name()));
-//			
-//			Iterator<String> itr = node.fieldNames();
-//		      
-//		     while(itr.hasNext()) {
-//		        Object element = itr.next();
-//		        System.out.println(element.toString()+" "+node.get(element.toString()));
-//		     }
-//		     
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		} catch (Throwable t){
-//			t.printStackTrace();
-//		}
-//		
+		jsonParams.put("jsonrpc", "2.0");
+		jsonParams.put("id", "0");
+		jsonParams.put("method", "getbalance");
+//		jsonParams.put("params", new JSONObject().put("payment_id",""));
+//		49GDLPceRyEP6pE8nDhxUjeTeX9qZeKwQBid3QUfmvFBVbpgLhvbwhFJAM27Ut4hESAdaj3R2Sni49LsPwbP9QxgPxyypkm
 		
-		//방안2 socket 통신
+		String params = jsonParams.toString();
 		
-		HashMap<String, Object> params = new HashMap<String, Object>();
-		HashMap<String, Object> params2 = new HashMap<String, Object>();
-		
-		params.put("jsonrpc", "2.0");
-		params.put("id", "0");
-		params.put("method", "make_integrated_address");
-		params2.put("payment_id", "panda");
-		params.put("params", params2);
+		System.out.println("params "+params);
 		
 		String url = props.getMonero_url()+"/json_rpc";
 		
 		HashMap<String, String> headers = new HashMap<>();
-		headers.put("Access-Control-Allow-Origin", "*");
-		headers.put("jsonrpc", "2.0");
-		headers.put("id", "0");
-		headers.put("method", "make_integrated_address");
-		headers.put("Content-Type", "application/json-rpc");
+		headers.put("Content-Type", "application/json; charset=UTF-8");
 		
-		String resultDecode = Util.request(url, "POST", params, headers);
+		String resultDecode = Util.request(url,params, headers);
 		
 		if (!resultDecode.startsWith("error")) {
 		    Map<String, Object> result;
 		    try {
 				result = new ObjectMapper().readValue(resultDecode, HashMap.class);
-		
-				System.out.println(result.get("status"));
 		
 				JSONObject json = new JSONObject();
 				for( Map.Entry<String, Object> entry : result.entrySet() ) {
