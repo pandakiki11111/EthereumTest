@@ -1,0 +1,91 @@
+관리자 권한으로 cmd 열기
+
+Chocolatey 설치 ( https://chocolatey.org/install ) cmd 관리자권한으로 실행하여 명령문 실행
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+
+개발환경 세팅 참고 URL 
+( https://github.com/ethereum/go-ethereum/wiki/Installation-instructions-for-Windows )
+
+git 설치 >> choco install git
+go 언어 설치 >> choco install golang (c:\go 에 설치권장, 환경변수 GOROOT(c:\go) GOPATH(작업할폴더) 설정 필요)
+mingw 설치 >> choco install mingw (리눅스 gcc 컴파일러를 윈도우용으로 에뮬레이팅 한 컴파일러) | http://dany-it.tistory.com/209 참고
+
+geth 설치 및 빌드 참고 URL ( https://geth.ethereum.org/install/ )
+
+go 언어를 이용해 geth 받기
+go get -d github.com/ethereum/go-ethereum
+go 언어를 이용해 geth 빌드
+go install github.com/ethereum/go-ethereum/cmd/geth
+
+URL 이용시 (
+	Geth 설치
+	https://ethereum.github.io/go-ethereum/downloads/
+	이더리움 설치 
+	https://github.com/ethereum-mining/ethminer/releases
+)
+
+geth command line options 명령어 옵션 리스트
+( https://github.com/ethereum/go-ethereum/wiki/Command-Line-Options )
+
+geth 계정 관리
+( https://github.com/ethereum/go-ethereum/wiki/Managing-your-accounts )
+
+testnet 접속
+geth --networkid 11111 --datadir eth_data --testnet console
+
+접속 후 로그
+=============================================================
+instance: Geth/v1.8.2-stable-b8b9f7f4/windows-amd64/go1.9.2
+ modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txp
+ool:1.0 web3:1.0
+=============================================================
+
+*송금, 계정 unlock 하는법
+> eth.sendTransaction({from: eth.accounts[0], to: eth.accounts[1], value: web3.t
+oWei(1, "ether")})
+Error: authentication needed: password or unlock
+    at web3.js:3143:20
+    at web3.js:6347:15
+    at web3.js:5081:36
+    at <anonymous>:1:1
+
+> web3.personal.listAccounts
+["0xf511419bc3edec0ea4550c04c927f7016a35d5f0", "0x62e1fb83d3f24f478ca63710ff3ad1
+e2896ca8b0"]
+
+> personal.unlockAccount("0xf511419bc3edec0ea4550c04c927f7016a35d5f0")
+Unlock account 0xf511419bc3edec0ea4550c04c927f7016a35d5f0
+Passphrase: //아이디 쓰면됨 panda
+true
+>
+
+json-rpc 서버로 geth 기동
+c:\Users\Administrator\Documents\ethereum>geth --networkid 123 --rpc --rpcaddr 1
+19.207.78.154 --rpcport 8545 --rpccorsdomain "*" --rpcapi "net,eth,web3,personal
+" --datadir "eth_data" --testnet console
+* rpcaddr : geth 를 기동시키는 ip
+* rpcport : 접속 port 디폴트는 8545 
+* rpccorsdomain : rpc 크로스도메인허가, 브라우저에서 직접 json-rpx를 송신할 경우 브라우저 pc의 ip 주소를 지정해야함 
+* rpcapi : rpc 호출을 허용하는 api ( 더 찾아보기 )
+
+rpc 성공 sample
+===============================================================================
+C:\Users\Administrator\Documents\ethereum>geth --networkid 11111 --datadir eth_d
+ata --rpc --rpcaddr "0.0.0.0" --rpcport "8545" --rpcapi "admin,db,eth,debug,mine
+r,net,shh,txpool,personal,web3" --rpccorsdomain "http://119.207.78.154:8545" --p
+ort 3031 --nodiscover --unlock 0 console
+======================================================================
+
+cmd 에서 telnet 사용 
+http://cofs.tistory.com/280
+
+solidity web3 연결 시 8545 포트가 열려있는지 확인해야함
+
+포트 열어야할때
+https://wiki.mcneel.com/ko/zoo/window7firewall
+
+rpc 연결이 안될때 크롬에서 allow control allow orgin 이 null 인 문제일 경우!
+https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related
+
+solidity remix url
+http://remix.ethereum.org
