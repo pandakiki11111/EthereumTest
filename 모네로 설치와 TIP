@@ -1,0 +1,28 @@
+choco install monero 로 daemon 설치
+
+API 문서
+https://getmonero.org/resources/developer-guides/
+
+1. monero 데몬 기동 ( Daemon RPC )
+( block 과 transaction 등의 정보를 관리하는 daemon )
+
+monerod --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18081 --confirm-external-bind --log-file monerod.log --testnet-data-dir testnet
+
+* testnet 은 네트워크 속도 문제로 못함.. testnet 테스트 시 --testnet 추가
+
+2. wallet client 데몬 기동 ( Wallet RPC에서 wallet 정보를 가져올 데몬 )
+monero-wallet-cli --wallet-file ThuWallet --password banco --daemon-port 18081
+* 첫 접속 시에는 --wallet-file 대신  --generate-new-wallet ThuWallet 식으로 wallet 생성이 필요함
+* daemon port 는 기동중인 monero 데몬 포트를 쓰면됨
+* testnet 에서 발급한 wallet file 은 mainnet (1번의 monero 데몬)이 testnet 일 경우에만 사용 가능
+
+3. wallet rpc 기동 ( Wallet RPC )
+monero-wallet-rpc --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18082 --wallet-file ThuWallet  --log-level 2 --disable-rpc-login --confirm-external-bind --daemon-port 18081
+* --rpc-bind-port 로 접속할 port 명시
+* 데몬들은 --log-level 로 로그 레벨이 설정 가능하다.
+  1은 미니멀 4번은 디테일
+* --confirm-external-bind 은 외부 접속 허용
+* --disable-rpc-login 은 permission 관련
+
+* rpc 에서 response 가 없을 시 port 가 open 되어있는지 확인하는것!! ㅠ ㅅ ㅠ 
+* postman 에서 테스트 후 java 단에서 코딩을 하는것이 좋다 (시간절약, 멘탈절약 등)
