@@ -26,6 +26,12 @@ public class Properties {
 	//coin name list
 	public String COIN_ETH = "ETH";
 	public String COIN_MON = "MON";
+	
+	//command list
+	public String METHOD_NEW_ACCOUT = "getnewaccount";
+	public String METHOD_GET_WALLET_ADDRESS = "getwalletaddress";
+	public String METHOD_GET_BALANCE = "getbalance";
+	public String METHOD_WITHDRAWAL_COIN = "withdrawalcoin";
 
 	public String getETHEREUM_IP() {
 		return ETHEREUM_IP;
@@ -48,11 +54,11 @@ public class Properties {
 	}
 
 	public String getMonero_url() {
-		return MONERO_IP + ":" + MONERO_PORT;
+		return MONERO_IP + ":" + MONERO_PORT + "/json_rpc";
 	}
 	
 	public List<String> getCoinNames(){
-		List<String> list = Arrays.asList(COINNAMES.split(","));
+		List<String> list = Arrays.asList(COINNAMES.toUpperCase().split(":"));
 		return list;
 	}
 }

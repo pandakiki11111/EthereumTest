@@ -28,7 +28,8 @@
 	<!-- Service -->
 	<beans:bean id="homeService" class="com.ethe.home.sevice.HomeServiceImpl"/>
 	<beans:bean id="Properties" class="com.ethe.home.properties.Properties"/>
- 
+	<beans:bean id="Util" class="com.ethe.util.Util"/>
+	
 	<!-- JSP View Resolver -->
 	<beans:bean
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">

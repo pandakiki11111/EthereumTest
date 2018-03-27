@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Wallet;
@@ -26,11 +25,7 @@ import org.web3j.crypto.WalletFile;
 import com.ethe.home.properties.Properties;
 
 public class Util {
-	
-	@Autowired(required=true)
-	static
-	Properties props;
-	
+
 	/** 
 	 * address 와 password 를 수동으로 생성
 	 * 
@@ -41,7 +36,7 @@ public class Util {
      * @return JSONObject
      */
 	@SuppressWarnings("unused")
-	private static JSONObject generateAccountInfo(String seed){
+	private JSONObject generateAccountInfo(String seed){
 
         JSONObject processJson = new JSONObject();
 
@@ -64,7 +59,9 @@ public class Util {
        return processJson;
 	}
 	
-	public static String request(String string_url, String params,  HashMap<String, String> headers){
+	public String request(String string_url, String params,  HashMap<String, String> headers){
+		
+		System.out.println("request "+string_url);
 		
 		 String response = "";
 		
@@ -104,14 +101,14 @@ public class Util {
 		}finally{
 			
 		}
-		
+		 System.out.println("response : "+ response);
 		return response;
 	}
 	
 	/**
 	 * map 을 query 문자로 변경
 	 */
-	public static String mapToQueryString(Map<String, Object> map) {
+	public String mapToQueryString(Map<String, Object> map) {
 		StringBuilder string = new StringBuilder();
 	
 		if (map.size() > 0) {
@@ -128,15 +125,30 @@ public class Util {
 		return string.toString();
     }
 	
-	public static Map<String, String> coinNameCheck(Map<String, String> map){
+	/**
+	 * map 을 json 형태로 변경
+	 * */
+	public JSONObject mapToJsonObject(Map<String, String> map){
+		JSONObject json = new JSONObject();
+		for( Map.Entry<String, String> entry : map.entrySet() ) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			json.put(key, value);
+		}
+		return json;
+	}
+	
+	public Map<String, String> coinNameCheck(Map<String, String> paramMap, Properties info){
 		
-		if(map.isEmpty()){
+		Map<String, String> map = new HashMap<>();
+		
+		if(paramMap.isEmpty()){
 			map.put("status", "error");
 			map.put("error_message", "parameter is empty");
-		}else if(!map.containsKey("coinname")){
+		}else if(!paramMap.containsKey("coinname")){
 			map.put("status", "error");
-			map.put("error_message", "coinname is empty");
-		}else if(props.getCoinNames().contains(map.get("coinname").toUpperCase())){
+			map.put("error_message", "coinname parameter is missing");
+		}else if(!info.getCoinNames().contains(paramMap.get("coinname").toUpperCase())){
 			map.put("status", "error");
 			map.put("error_message", "coinname is invalid");
 		}else{

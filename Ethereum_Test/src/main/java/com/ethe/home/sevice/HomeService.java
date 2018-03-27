@@ -1,14 +1,11 @@
 package com.ethe.home.sevice;
 
-import java.util.List;
-import java.util.Map;
+import java.util.HashMap;
+
+import org.json.JSONObject;
 
 public interface HomeService {
 	
-	public Map<String, String> newAccount(Map<String, String> paramMap);
-
-	public List<Map<String, String>> accountList(Map<String, String> paramMap);
-	
-	public List<Map<String, String>> getBalance(Map<String, String> paramMap);
+	public JSONObject apiCall(HashMap<String, String> map);
 	
 }

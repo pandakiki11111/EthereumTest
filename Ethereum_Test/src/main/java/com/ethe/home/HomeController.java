@@ -4,18 +4,15 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.ethe.home.sevice.HomeServiceImpl;
@@ -45,27 +42,14 @@ public class HomeController {
 		return "home";
 	}
 	
-	@RequestMapping(value = "/GetNewAccount", method = RequestMethod.POST)
-	public ModelAndView newAccount(Model model, HttpServletRequest request){
-		logger.info("make new Account");
+	@RequestMapping(value = "/api", method = RequestMethod.POST)
+	public ModelAndView CoreAPI(Model model, @RequestParam HashMap<String, String> map){
+		logger.info("API Call");
 		
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("jsonView");
 		
-		mv.addObject(homeService.newAccount(request.getParameterMap()));
-
-		return mv;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@RequestMapping(value = "/GetBalance", method = RequestMethod.GET)
-	public ModelAndView getBalance(Model model, HttpServletRequest request){
-		logger.info("get Balance");
-		
-		ModelAndView mv = new ModelAndView();
-		mv.setViewName("jsonView");
-		
-		mv.addObject(homeService.getBalance(request.getParameterMap()));
+		mv.addObject(homeService.apiCall(map));
 
 		return mv;
 	}
