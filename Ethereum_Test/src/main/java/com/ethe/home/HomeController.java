@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class HomeController {
 	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 	
 	//simple jsp test page
-	@RequestMapping(value = "/", method = RequestMethod.POST)
+	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String home(Locale locale, Model model) {
 		logger.info("Welcome home! The client locale is {}.", locale);
 		
@@ -49,7 +50,10 @@ public class HomeController {
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("jsonView");
 		
-		mv.addObject(homeService.apiCall(map));
+		JSONObject result = homeService.apiCall(map);
+		if(!result.has("status")) result.put("status", "success");
+		
+		mv.addObject("data", result.toMap());
 
 		return mv;
 	}

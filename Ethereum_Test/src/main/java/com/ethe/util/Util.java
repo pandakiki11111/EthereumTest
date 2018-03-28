@@ -9,7 +9,6 @@ import java.io.Reader;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -17,14 +16,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Wallet;
 import org.web3j.crypto.WalletFile;
 
 import com.ethe.home.properties.Properties;
+import com.ethe.home.sevice.HomeServiceImpl;
 
 public class Util {
+	
+	private static final Logger logger = LoggerFactory.getLogger(HomeServiceImpl.class);
 
 	/** 
 	 * address 와 password 를 수동으로 생성
@@ -61,15 +65,16 @@ public class Util {
 	
 	public String request(String string_url, String params,  HashMap<String, String> headers){
 		
-		System.out.println("request "+string_url);
+		logger.info("request url : "+string_url);
 		
 		 String response = "";
+		 HttpURLConnection http = null;
+		 InputStream in = null;
 		
 		try {
 			
 			URL url = new URL(string_url);
-			URLConnection con = url.openConnection();
-			HttpURLConnection http = (HttpURLConnection)con;
+			http = (HttpURLConnection) url.openConnection();
 			http.setRequestMethod("POST");
 			http.setDoOutput(true);
 			
@@ -83,7 +88,7 @@ public class Util {
 			    os.write(out);
 			}
 			
-			InputStream in = http.getInputStream();
+			in = http.getInputStream();
 			
 			StringBuilder textBuilder = new StringBuilder();
 		    try (Reader reader = new BufferedReader(new InputStreamReader(in, Charset.forName(StandardCharsets.UTF_8.name())))) {
@@ -91,17 +96,20 @@ public class Util {
 		        while ((c = reader.read()) != -1) {
 		            textBuilder.append((char) c);
 		        }
+		    }catch(Exception e){
+		    	
+		    }finally{
+		    	in.close();
 		    }
 		    
 		    response = textBuilder.toString();
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}finally{
-			
+			if(http != null) http.disconnect();
 		}
-		 System.out.println("response : "+ response);
+		
 		return response;
 	}
 	
@@ -131,6 +139,19 @@ public class Util {
 	public JSONObject mapToJsonObject(Map<String, String> map){
 		JSONObject json = new JSONObject();
 		for( Map.Entry<String, String> entry : map.entrySet() ) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			json.put(key, value);
+		}
+		return json;
+	}
+	
+	/**
+	 * map 을 json 형태로 변경 Object 용
+	 * */
+	public JSONObject mapToJsonObject(Map<String, Object> map, int flag){
+		JSONObject json = new JSONObject();
+		for( Map.Entry<String, Object> entry : map.entrySet() ) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
 			json.put(key, value);

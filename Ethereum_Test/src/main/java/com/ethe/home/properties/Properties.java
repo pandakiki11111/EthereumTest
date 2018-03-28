@@ -24,10 +24,9 @@ public class Properties {
 	private String COINNAMES;
 	
 	//coin name list
-	public String COIN_ETH = "ETH";
 	public String COIN_MON = "MON";
 	
-	//command list
+	//command list (확인용)
 	public String METHOD_NEW_ACCOUT = "getnewaccount";
 	public String METHOD_GET_WALLET_ADDRESS = "getwalletaddress";
 	public String METHOD_GET_BALANCE = "getbalance";

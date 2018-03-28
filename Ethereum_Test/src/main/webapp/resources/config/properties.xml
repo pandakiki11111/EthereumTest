@@ -28,5 +28,5 @@
     <entry key="monero.ip">http://119.207.78.154</entry>
     <entry key="monero.port">18082</entry>
 
-	<entry key="coinnames">ETH:MON</entry>
+	<entry key="coinnames">MON:ETC</entry>
 </properties>
