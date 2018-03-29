@@ -83,9 +83,12 @@ public class Util {
 
 			http.setFixedLengthStreamingMode(length);
 			http.setRequestProperty("Content-Type", "application/json-rpc; charset=UTF-8");
-			http.connect();
+			
 			try(OutputStream os = http.getOutputStream()) {
+				http.connect();
 			    os.write(out);
+			}catch(Exception e){
+				return "error@#rpc server: "+e.getMessage();
 			}
 			
 			in = http.getInputStream();
@@ -159,23 +162,23 @@ public class Util {
 		return json;
 	}
 	
-	public Map<String, String> coinNameCheck(Map<String, String> paramMap, Properties info){
+	public JSONObject coinNameCheck(JSONObject param, Properties info){
 		
-		Map<String, String> map = new HashMap<>();
+		JSONObject result = new JSONObject();
 		
-		if(paramMap.isEmpty()){
-			map.put("status", "error");
-			map.put("error_message", "parameter is empty");
-		}else if(!paramMap.containsKey("coinname")){
-			map.put("status", "error");
-			map.put("error_message", "coinname parameter is missing");
-		}else if(!info.getCoinNames().contains(paramMap.get("coinname").toUpperCase())){
-			map.put("status", "error");
-			map.put("error_message", "coinname is invalid");
+		if(param.length() == 0){
+			result.put("status", "error");
+			result.put("error_message", "parameter is empty");
+		}else if(!param.has("coinname")){
+			result.put("status", "error");
+			result.put("error_message", "coinname parameter is missing");
+		}else if(!info.getCoinNames().contains(param.get("coinname").toString().toUpperCase())){
+			result.put("status", "error");
+			result.put("error_message", "coinname is invalid");
 		}else{
-			map.put("status", "success");
+			result.put("status", "success");
 		}
 		
-		return map;
+		return result;
 	}
 }
