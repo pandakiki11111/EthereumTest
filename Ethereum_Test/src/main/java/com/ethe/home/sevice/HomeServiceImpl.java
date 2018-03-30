@@ -1,15 +1,11 @@
 package com.ethe.home.sevice;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,6 +155,13 @@ public class HomeServiceImpl implements HomeService{
 		return result;
 	}
 	
+	/**
+	 * monero open wallet
+	 * API 사용전 wallet을 open 해야한다
+	 * @param param
+	 * @param info
+	 * @return
+	 */
 	private JSONObject monero_open_wallet(JSONObject param, Properties info){
 		
 		JSONObject jsonParams = new JSONObject();
@@ -196,25 +199,7 @@ public class HomeServiceImpl implements HomeService{
 		
 		return monero_request(jsonParams, info);
 	}
-	
-	/**
-	 * 밸런스 값 가져오기
-	 * 
-	 * @param paramMap
-	 * @param info
-	 * @return
-	 */
-	@SuppressWarnings({ "unused" })
-	private JSONObject MON_GETBALANCE(JSONObject param, Properties info) {
-		
-		JSONObject open = monero_open_wallet(param, info);
-		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
-		
-		param.put("method", "getbalance");
-		
-		return monero_request(param, info);
-	}
-	
+
 	/**
 	 * wallet 주소 가져오기
 	 * 
@@ -236,32 +221,55 @@ public class HomeServiceImpl implements HomeService{
 	}
 	
 	/**
+	 * 밸런스 값 가져오기
+	 * 
+	 * @param paramMap
+	 * @param info
+	 * @return
+	 */
+	@SuppressWarnings({ "unused" })
+	private JSONObject MON_GETBALANCE(JSONObject param, Properties info) {
+		
+		JSONObject open = monero_open_wallet(param, info);
+		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+		
+		param.put("method", "getbalance");
+		
+		JSONObject result = new JSONObject(monero_request(param, info).toString());
+		
+		System.out.println(result.toString());
+		System.out.println(result.getJSONObject("result").get("balance"));
+		
+		//setting result data
+		if(result.getJSONObject("result").has("balance")) result.getJSONObject("result").put("balance", new Util().toMonero(info.unit_piconero, (double) result.getJSONObject("result").get("balance")));
+		if(result.getJSONObject("result").has("balance")) result.getJSONObject("result").put("unlocked_balance", new Util().toMonero(info.unit_piconero, (double) result.getJSONObject("result").get("unlocked_balance")));
+		
+		return result;
+	}
+	
+	
+	/**
 	 * 송금
 	 * 
 	 * @param paramMap
 	 * @param info
 	 * @return
 	 */
-	@SuppressWarnings({ "unused", "unchecked" })
+	@SuppressWarnings({ "unused" })
 	private JSONObject MON_WITHDRAWALCOIN(JSONObject param, Properties info) {
 		
-//		JSONObject open = monero_open_wallet(param, info);
-//		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
-//		
-		JSONObject jsonParams = new JSONObject();
+		JSONObject open = monero_open_wallet(param, info);
+		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
 		
-		jsonParams.put("method", "transfer");
+		//주소와 금액 destination Setting
+		JSONObject destination = new JSONObject();
 		
-		System.out.println(param.toString());
+		JSONObject params = new JSONObject(param.toString());
+		JSONArray dataArray =  new JSONArray(params.get("data").toString());
 		
-		//주소와 금액 Setting
-		Map<String, String> destination = new HashMap<>();
-		
-		try {
-			destination = new ObjectMapper().readValue(param.get("data").toString(), HashMap.class);
-		}catch(Exception e){
-			param.put("status", "error");
-			param.put("error_message", "( check destinations ) "+e.getMessage());
+		for(int i = 0; i < dataArray.length(); i++){
+			destination.put("amount", dataArray.getJSONObject(i).getDouble("amount"));
+			destination.put("address", dataArray.getJSONObject(i).getString("toaddress"));
 		}
 		
 		//params setting
@@ -271,10 +279,33 @@ public class HomeServiceImpl implements HomeService{
 		dataParams.put("get_tx_key", true); //Return the transaction key after sending
 		dataParams.put("destinations", destination);
 		
+		JSONObject jsonParams = new JSONObject();
+		
+		jsonParams.put("method", "transfer");
 		jsonParams.put("params", dataParams);
 		
-		logger.info("jsonParams : " +jsonParams.toString());
-		
 		return monero_request(jsonParams, info);
+	}
+	
+	@SuppressWarnings("unused")
+	private JSONObject MON_GETTRANSACTION(JSONObject param, Properties info) {
+		JSONObject open = monero_open_wallet(param, info);
+		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+		
+		//params setting
+		JSONObject dataParams = new JSONObject();
+		dataParams.put("pool", true);
+		
+		JSONObject jsonParams = new JSONObject();
+		
+		jsonParams.put("method", "get_transfers");
+		jsonParams.put("params", dataParams);
+		
+		JSONObject result = monero_request(param, info);
+		
+		//setting result data
+		if(result.has("result.pool.amount")) result.put("result.pool.amount", new Util().toMonero(info.unit_piconero, (double) result.get("result.pool.amount")));
+		
+		return result;
 	}
 }

@@ -181,4 +181,39 @@ public class Util {
 		
 		return result;
 	}
+	
+	/**
+	 * other units to monero (check if null)
+	 * 
+	 * @param decimal
+	 * @param amount
+	 * @return
+	 */
+	public Double toMonero(int decimal, double amount){
+		
+		Map<String, Integer> map = new Properties().getNeros();
+		
+		if(map.values().contains(decimal)){
+			return amount * (Math.pow(10, (decimal*-1)));
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * monero to units (check if null)
+	 * 
+	 * @param decimal
+	 * @param amount
+	 * @return
+	 */
+	public Double toUnit(int decimal, double amount){
+		Map<String, Integer> map = new Properties().getNeros();
+		
+		if(map.values().contains(decimal)){
+			return amount * (Math.pow(10, decimal));
+		}
+		
+		return null;
+	}
 }
