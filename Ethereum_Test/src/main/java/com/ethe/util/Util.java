@@ -6,11 +6,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,8 +111,6 @@ public class Util {
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally{
-			if(http != null) http.disconnect();
 		}
 		
 		return response;
@@ -189,12 +189,19 @@ public class Util {
 	 * @param amount
 	 * @return
 	 */
-	public Double toMonero(int decimal, double amount){
-		
+	public String toMonero(int decimal, double amount){
+
 		Map<String, Integer> map = new Properties().getNeros();
 		
+		System.out.println("d : "+ decimal+"/"+amount);
+		
 		if(map.values().contains(decimal)){
-			return amount * (Math.pow(10, (decimal*-1)));
+			Double d = new Double(amount * (Math.pow(10, decimal)));
+			
+			System.out.println("to monero : "+ BigDecimal.valueOf(d).toPlainString());
+			System.out.println("to unit : "+ toUnit(decimal, d));
+			
+			return BigDecimal.valueOf(d).toPlainString();
 		}
 		
 		return null;
@@ -207,13 +214,27 @@ public class Util {
 	 * @param amount
 	 * @return
 	 */
-	public Double toUnit(int decimal, double amount){
+	public String toUnit(int decimal, double amount){
 		Map<String, Integer> map = new Properties().getNeros();
 		
+		System.out.println("d : "+ decimal+"/"+amount);
+		
 		if(map.values().contains(decimal)){
-			return amount * (Math.pow(10, decimal));
+			Double d = new Double(amount * (Math.pow(10, (decimal*-1))));
+			return BigDecimal.valueOf(d).toPlainString();
 		}
 		
 		return null;
+	}
+	
+
+	public JSONObject paramValidator(JSONObject param, String command) {
+		JSONObject result = new JSONObject();
+		
+		if("".equals(command)){
+			param.has("");
+		}
+		
+		return result;
 	}
 }

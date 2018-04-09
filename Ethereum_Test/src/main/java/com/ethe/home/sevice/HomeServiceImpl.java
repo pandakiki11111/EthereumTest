@@ -58,7 +58,7 @@ public class HomeServiceImpl implements HomeService{
 		String command = param.get("command").toString();
 		
 		//generate method name
-		String methodName = (coinname+"_"+command).toUpperCase();
+		String methodName = (coinname+"_"+command).toLowerCase();
 		
 		logger.info("coin_name : " + coinname + ", command : " + command + ", method_name : " + methodName);
 
@@ -119,11 +119,11 @@ public class HomeServiceImpl implements HomeService{
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private JSONObject monero_request(JSONObject jsonParams, Properties info){
+	private JSONObject monero_request(JSONObject jsonParams, Properties info, String serverType){
 		Util util = new Util();
 		JSONObject result = new JSONObject();
 		
-		String url = info.getMonero_url();
+		String url = info.getMonero_url(serverType);
 		
 		HashMap<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json; charset=UTF-8");
@@ -154,6 +154,7 @@ public class HomeServiceImpl implements HomeService{
 		
 		return result;
 	}
+
 	
 	/**
 	 * monero open wallet
@@ -162,7 +163,7 @@ public class HomeServiceImpl implements HomeService{
 	 * @param info
 	 * @return
 	 */
-	private JSONObject monero_open_wallet(JSONObject param, Properties info){
+	private JSONObject mon_openwallet(JSONObject param, Properties info){
 		
 		JSONObject jsonParams = new JSONObject();
 		JSONObject data = new JSONObject();
@@ -173,8 +174,90 @@ public class HomeServiceImpl implements HomeService{
 		jsonParams.put("method", "open_wallet");
 		jsonParams.put("params", data);
 		
-		return monero_request(jsonParams, info);
+		return monero_request(jsonParams, info, "rpc");
 		
+	}
+	
+	/**
+	 * 접속한 rpc 서버의 block height 정보 정보 가져오기 실패시 -1 돌려줌
+	 * @param param
+	 * @param info
+	 * @return
+	 */
+	private Integer mon_getheight(JSONObject param, Properties info){
+		
+		int returnValue = -1;
+		
+		try{
+			JSONObject result = new JSONObject(monero_request(new JSONObject().put("method", "getheight"), info, "rpc").toString());
+			
+			if(!result.has("error") && result.has("result")){
+				if(result.getJSONObject("result").has("height")){
+					returnValue = result.getJSONObject("result").getInt("height");
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			returnValue = -1;
+		}
+		
+		return returnValue;
+	}
+	
+	private Integer mon_getblockcount(JSONObject param, Properties info){
+		int returnValue = -1;
+		
+		try{
+			JSONObject result = new JSONObject(monero_request(new JSONObject().put("method", "getblockcount"), info, "daemon").toString());
+			
+			if((!result.has("error")) && result.has("result")){
+				if(result.getJSONObject("result").has("count")){
+					returnValue = result.getJSONObject("result").getInt("count");
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			returnValue = -1;
+		}
+		
+		return returnValue;
+	}	
+	
+	private JSONObject mon_checksync(JSONObject param, Properties info) {
+		boolean bool = false;
+		int time = 0;
+		
+		JSONObject result = new JSONObject();
+		
+		try{
+			while(bool == false){
+				int rpcHeight = mon_getheight(param, info);
+				int daemonHeight = mon_getblockcount(param, info);
+				
+				if(rpcHeight == daemonHeight){
+					bool = true;
+				}else{
+					if(time <= 30){
+						Thread.sleep(3000); //5초
+						time += 3;
+						continue;
+					}else{
+						bool = true;
+					}
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			result.put("status", "error");
+			result.put("error_message","check sync between rpc and daemon ("+e.getMessage()+")");
+		}
+		
+		if(time > 30){
+			result.put("status", "error");
+			result.put("error_message", "sync time over 30");
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -185,7 +268,7 @@ public class HomeServiceImpl implements HomeService{
 	 * @return
 	 */
 	@SuppressWarnings({ "unused" })
-	private JSONObject MON_GETNEWACCOUNT(JSONObject param, Properties info){
+	private JSONObject mon_getnewaccount(JSONObject param, Properties info){
 
 		JSONObject jsonParams = new JSONObject();
 		JSONObject data = new JSONObject();
@@ -197,7 +280,7 @@ public class HomeServiceImpl implements HomeService{
 		jsonParams.put("method", "create_wallet");
 		jsonParams.put("params", data);
 		
-		return monero_request(jsonParams, info);
+		return monero_request(jsonParams, info, "rpc");
 	}
 
 	/**
@@ -208,16 +291,16 @@ public class HomeServiceImpl implements HomeService{
 	 * @return
 	 */
 	@SuppressWarnings("unused")
-	private JSONObject MON_GETWALLETADDRESS(JSONObject param, Properties info) {
+	private JSONObject mon_getwalletaddress(JSONObject param, Properties info) {
 		
-		JSONObject open = monero_open_wallet(param, info);
-		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+		JSONObject open = mon_openwallet(param, info);
+		if(open.has("error")) return open;
 		
 		JSONObject jsonParams = new JSONObject();
 		
 		jsonParams.put("method", "getaddress");
 		
-		return monero_request(jsonParams, info);
+		return monero_request(jsonParams, info, "rpc");
 	}
 	
 	/**
@@ -226,23 +309,34 @@ public class HomeServiceImpl implements HomeService{
 	 * @param paramMap
 	 * @param info
 	 * @return
+	 * @throws InterruptedException 
 	 */
 	@SuppressWarnings({ "unused" })
-	private JSONObject MON_GETBALANCE(JSONObject param, Properties info) {
+	private JSONObject mon_getbalance(JSONObject param, Properties info) throws InterruptedException {
 		
-		JSONObject open = monero_open_wallet(param, info);
-		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+		JSONObject open = mon_openwallet(param, info);
+		if(open.has("error")) return open;
+		
+		JSONObject sync = mon_checksync(param, info);
+		if(sync.has("status")) return sync;
 		
 		param.put("method", "getbalance");
 		
-		JSONObject result = new JSONObject(monero_request(param, info).toString());
+		JSONObject result = new JSONObject(monero_request(param, info, "rpc").toString());
 		
-		System.out.println(result.toString());
-		System.out.println(result.getJSONObject("result").get("balance"));
+		if(result.has("status")) return result;
 		
 		//setting result data
-		if(result.getJSONObject("result").has("balance")) result.getJSONObject("result").put("balance", new Util().toMonero(info.unit_piconero, (double) result.getJSONObject("result").get("balance")));
-		if(result.getJSONObject("result").has("balance")) result.getJSONObject("result").put("unlocked_balance", new Util().toMonero(info.unit_piconero, (double) result.getJSONObject("result").get("unlocked_balance")));
+		if(!result.has("error")){
+			if(result.getJSONObject("result").has("balance")) {
+				Double balance = result.getJSONObject("result").getDouble("balance");
+				result.getJSONObject("result").put("balance", new Util().toMonero(info.unit_piconero, balance));
+			}
+			if(result.getJSONObject("result").has("unlocked_balance")) {
+				Double unlocked_balance = result.getJSONObject("result").getDouble("unlocked_balance");
+				result.getJSONObject("result").put("unlocked_balance", new Util().toMonero(info.unit_piconero, unlocked_balance));
+			}
+		}
 		
 		return result;
 	}
@@ -256,20 +350,27 @@ public class HomeServiceImpl implements HomeService{
 	 * @return
 	 */
 	@SuppressWarnings({ "unused" })
-	private JSONObject MON_WITHDRAWALCOIN(JSONObject param, Properties info) {
+	private JSONObject mon_withdrawalcoin(JSONObject param, Properties info) {
 		
-		JSONObject open = monero_open_wallet(param, info);
-		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+		JSONObject open = mon_openwallet(param, info);
+		if(open.has("error")) return open;
+		
+		JSONObject sync = mon_checksync(param, info);
+		if(sync.has("status")) return sync;
 		
 		//주소와 금액 destination Setting
-		JSONObject destination = new JSONObject();
+		JSONArray destinations = new JSONArray();
 		
 		JSONObject params = new JSONObject(param.toString());
 		JSONArray dataArray =  new JSONArray(params.get("data").toString());
 		
 		for(int i = 0; i < dataArray.length(); i++){
+			JSONObject destination = new JSONObject();
+			
 			destination.put("amount", dataArray.getJSONObject(i).getDouble("amount"));
 			destination.put("address", dataArray.getJSONObject(i).getString("toaddress"));
+			
+			destinations.put(destination);
 		}
 		
 		//params setting
@@ -277,34 +378,53 @@ public class HomeServiceImpl implements HomeService{
 		
 		dataParams.put("mixin", 4); // total 5 signatures (checkout monero ring signature)
 		dataParams.put("get_tx_key", true); //Return the transaction key after sending
-		dataParams.put("destinations", destination);
+		dataParams.put("destinations", destinations);
 		
 		JSONObject jsonParams = new JSONObject();
 		
 		jsonParams.put("method", "transfer");
 		jsonParams.put("params", dataParams);
 		
-		return monero_request(jsonParams, info);
+		System.out.println("jsonParams : "+jsonParams);
+		
+		return monero_request(jsonParams, info, "rpc");
 	}
 	
+	/**
+	 * 송금 내역 확인
+	 * @param param
+	 * @param info
+	 * @return
+	 */
 	@SuppressWarnings("unused")
-	private JSONObject MON_GETTRANSACTION(JSONObject param, Properties info) {
-		JSONObject open = monero_open_wallet(param, info);
-		if(!open.has("id") || !"0".equals(open.get("id").toString())) return open;
+	private JSONObject mon_gettransaction(JSONObject param, Properties info) {
+		
+		JSONObject open = mon_openwallet(param, info);
+		if(open.has("error")) return open;
+		
+		JSONObject sync = mon_checksync(param, info);
+		if(sync.has("status")) return sync;
 		
 		//params setting
 		JSONObject dataParams = new JSONObject();
-		dataParams.put("pool", true);
+		dataParams.put("txid", (param.has("txid") ? param.get("txid") : ""));
 		
 		JSONObject jsonParams = new JSONObject();
 		
-		jsonParams.put("method", "get_transfers");
+		jsonParams.put("method", "get_transfer_by_txid");
 		jsonParams.put("params", dataParams);
 		
-		JSONObject result = monero_request(param, info);
+		System.out.println(jsonParams.toString());
+		
+		JSONObject result = new JSONObject(monero_request(jsonParams, info, "rpc").toString());
 		
 		//setting result data
-		if(result.has("result.pool.amount")) result.put("result.pool.amount", new Util().toMonero(info.unit_piconero, (double) result.get("result.pool.amount")));
+		if(!result.has("error")){
+			if(result.getJSONObject("result").getJSONObject("transfer").has("amount")){
+				double amount = result.getJSONObject("result").getJSONObject("transfer").getDouble("amount");
+				result.getJSONObject("result").getJSONObject("transfer").put("amount",  new Util().toMonero(info.unit_piconero, amount));
+			}
+		}
 		
 		return result;
 	}

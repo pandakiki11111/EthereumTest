@@ -22,6 +22,12 @@ public class Properties {
 	@Value("#{properties['monero.port']}")
 	private String MONERO_PORT;
 	
+	@Value("#{properties['monero.daemon.ip']}")
+	private String MONERO_DAEMON_IP;
+	
+	@Value("#{properties['monero.daemon.port']}")
+	private String MONERO_DAEMON_PORT;
+	
 	@Value("#{properties['coinnames']}")
 	private String COINNAMES;
 	
@@ -37,11 +43,11 @@ public class Properties {
 	
 	//unit list
 	public int unit_piconero = -12;
-	public int unit_nanonero = 9;
-	public int unit_micronero = 6;
-	public int unit_millinero = 3;
-	public int unit_centinero = 2;
-	public int unit_decinero = 1;
+	public int unit_nanonero = -9;
+	public int unit_micronero = -6;
+	public int unit_millinero = -3;
+	public int unit_centinero = -2;
+	public int unit_decinero = -1;
 	public int unit_monero = 0;
 	public int unit_decanero = 1;
 	public int unit_hectonero = 2;
@@ -67,9 +73,24 @@ public class Properties {
 	public String getMONERO_PORT() {
 		return MONERO_PORT;
 	}
+	
+	public String getMONERO_DAEMON_IP() {
+		return MONERO_DAEMON_IP;
+	}
 
-	public String getMonero_url() {
-		return MONERO_IP + ":" + MONERO_PORT + "/json_rpc";
+	public String getMONERO_DAEMON_PORT() {
+		return MONERO_DAEMON_PORT;
+	}
+
+	/**
+	 * return monero url (default : rpc)
+	 * @param type
+	 * @return
+	 */
+	public String getMonero_url(String type) {
+		String url = MONERO_IP + ":" + MONERO_PORT;
+		if("daemon".equals(type)) url = MONERO_DAEMON_IP + ":" + MONERO_DAEMON_PORT;
+		return url + "/json_rpc";
 	}
 	
 	public List<String> getCoinNames(){
