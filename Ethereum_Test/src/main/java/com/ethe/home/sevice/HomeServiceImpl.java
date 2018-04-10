@@ -1,6 +1,7 @@
 package com.ethe.home.sevice;
 
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.ECKeyPair;
+import org.web3j.crypto.Keys;
+import org.web3j.crypto.Wallet;
+import org.web3j.crypto.WalletFile;
 
 import com.ethe.util.Util;
 import com.ethe.home.properties.Properties;
@@ -414,8 +419,6 @@ public class HomeServiceImpl implements HomeService{
 		jsonParams.put("method", "get_transfer_by_txid");
 		jsonParams.put("params", dataParams);
 		
-		System.out.println(jsonParams.toString());
-		
 		JSONObject result = new JSONObject(monero_request(jsonParams, info, "rpc").toString());
 		
 		//setting result data
@@ -427,5 +430,59 @@ public class HomeServiceImpl implements HomeService{
 		}
 		
 		return result;
+	}
+	
+	@SuppressWarnings("unused")
+	private JSONObject mon_gettransactionlist(JSONObject param, Properties info) {
+//		JSONObject open = mon_openwallet(param, info);
+//		if(open.has("error")) return open;
+//		
+//		JSONObject sync = mon_checksync(param, info);
+//		if(sync.has("status")) return sync;
+
+		//params setting
+		JSONObject dataParams = new JSONObject();
+		dataParams.put("max_height", (param.has("count") ? param.getInt("count") : 5));
+		dataParams.put("in", (param.has("in") ? param.getBoolean("in") : true));
+		dataParams.put("out", (param.has("out") ? param.getBoolean("out") : true));
+		dataParams.put("failed", (param.has("failed") ? param.getBoolean("failed") : true));
+				
+		JSONObject jsonParams = new JSONObject();
+		
+		jsonParams.put("method", "get_transfers");
+		jsonParams.put("params", dataParams);
+		
+		JSONObject result = new JSONObject(monero_request(jsonParams, info, "rpc").toString());
+		
+		generateAccountInfo("seed");
+		
+		
+		return result;
+	}
+	
+	private JSONObject generateAccountInfo(String seed){
+
+        JSONObject processJson = new JSONObject();
+
+        try {
+           ECKeyPair ecKeyPair = Keys.createEcKeyPair();
+           BigInteger privateKeyInDec = ecKeyPair.getPrivateKey();
+
+           String sPrivatekeyInHex = privateKeyInDec.toString(16);
+
+           WalletFile aWallet = Wallet.createLight(seed, ecKeyPair);
+           String sAddress = aWallet.getAddress();
+
+           processJson.put("address", "0x" + sAddress);
+           processJson.put("privatekey", sPrivatekeyInHex);
+           
+           System.out.println("1 : " + "0x" + sAddress);
+           System.out.println("2 : "+ sPrivatekeyInHex);
+
+       } catch (Exception e) {
+    	   e.printStackTrace();
+       }
+
+       return processJson;
 	}
 }

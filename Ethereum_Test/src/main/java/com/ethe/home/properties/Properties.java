@@ -40,6 +40,8 @@ public class Properties {
 	public String METHOD_GET_BALANCE = "getbalance";
 	public String METHOD_WITHDRAWAL_COIN = "withdrawalcoin";
 	public String METHOD_GET_TRANSACTION = "gettransaction";
+	public String METHOD_GET_TRANSACTION_LIST = "gettransactionlist";
+	public String METHOD_OPEN_WALLET = "openwallet";
 	
 	//unit list
 	public int unit_piconero = -12;

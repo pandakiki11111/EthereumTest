@@ -12,7 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,7 +35,6 @@ public class Util {
 	 * address 와 password 를 수동으로 생성
 	 * 
 	 * String seed = UUID.randomUUID().toString();
-     * JSONObject result = process(seed);
      * 
      * @param seed
      * @return JSONObject
