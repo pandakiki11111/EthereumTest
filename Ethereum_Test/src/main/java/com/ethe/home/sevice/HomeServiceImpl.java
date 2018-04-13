@@ -434,11 +434,11 @@ public class HomeServiceImpl implements HomeService{
 	
 	@SuppressWarnings("unused")
 	private JSONObject mon_gettransactionlist(JSONObject param, Properties info) {
-//		JSONObject open = mon_openwallet(param, info);
-//		if(open.has("error")) return open;
-//		
-//		JSONObject sync = mon_checksync(param, info);
-//		if(sync.has("status")) return sync;
+		JSONObject open = mon_openwallet(param, info);
+		if(open.has("error")) return open;
+		
+		JSONObject sync = mon_checksync(param, info);
+		if(sync.has("status")) return sync;
 
 		//params setting
 		JSONObject dataParams = new JSONObject();
@@ -446,6 +446,8 @@ public class HomeServiceImpl implements HomeService{
 		dataParams.put("in", (param.has("in") ? param.getBoolean("in") : true));
 		dataParams.put("out", (param.has("out") ? param.getBoolean("out") : true));
 		dataParams.put("failed", (param.has("failed") ? param.getBoolean("failed") : true));
+		dataParams.put("pool ", true);
+		dataParams.put("pending ", true);
 				
 		JSONObject jsonParams = new JSONObject();
 		
@@ -454,35 +456,6 @@ public class HomeServiceImpl implements HomeService{
 		
 		JSONObject result = new JSONObject(monero_request(jsonParams, info, "rpc").toString());
 		
-		generateAccountInfo("seed");
-		
-		
 		return result;
-	}
-	
-	private JSONObject generateAccountInfo(String seed){
-
-        JSONObject processJson = new JSONObject();
-
-        try {
-           ECKeyPair ecKeyPair = Keys.createEcKeyPair();
-           BigInteger privateKeyInDec = ecKeyPair.getPrivateKey();
-
-           String sPrivatekeyInHex = privateKeyInDec.toString(16);
-
-           WalletFile aWallet = Wallet.createLight(seed, ecKeyPair);
-           String sAddress = aWallet.getAddress();
-
-           processJson.put("address", "0x" + sAddress);
-           processJson.put("privatekey", sPrivatekeyInHex);
-           
-           System.out.println("1 : " + "0x" + sAddress);
-           System.out.println("2 : "+ sPrivatekeyInHex);
-
-       } catch (Exception e) {
-    	   e.printStackTrace();
-       }
-
-       return processJson;
 	}
 }
