@@ -3,12 +3,19 @@ choco install monero 로 daemon 설치
 API 문서
 https://getmonero.org/resources/developer-guides/
 
+monero에는 3개의 데몬이 존재한다.
+1. mainnet
+2. wallet
+3. rpc
+mainnet이 기동중이어야 wallet 사용이 가능하고  wallet 이 사용가능해야 rpc 서버가 wallet 에서 
+필요 정보를 가져올 수 있으므로 wallet rpc api 사용이 가능하다.
+
 1. monero 데몬 기동 ( Daemon RPC )
 ( block 과 transaction 등의 정보를 관리하는 daemon )
 
 monerod --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18081 --confirm-external-bind --log-file monerod.log --testnet-data-dir testnet
 
-* testnet 은 네트워크 속도 문제로 못함.. testnet 테스트 시 --testnet 추가
+* testnet 은 네트워크 속도 문제로 못해봤음.. testnet 테스트 시 --testnet 추가
 
 2. wallet client 데몬 기동 ( Wallet RPC에서 wallet 정보를 가져올 데몬 )
 monero-wallet-cli --wallet-file ThuWallet --password banco --daemon-port 18081
@@ -24,5 +31,60 @@ monero-wallet-rpc --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18082 --wallet-file ThuW
 * --confirm-external-bind 은 외부 접속 허용
 * --disable-rpc-login 은 permission 관련
 
-* rpc 에서 response 가 없을 시 port 가 open 되어있는지 확인하는것!! ㅠ ㅅ ㅠ 
+* rpc 에서 response 가 없을 시 port 가 open 되어있는지 확인하는것!! ㅠ ㅅ ㅠ 자꾸까먹
 * postman 에서 테스트 후 java 단에서 코딩을 하는것이 좋다 (시간절약, 멘탈절약 등)
+
+testnet에서 
+
+mining 후 wallet에서 balance 를 확인하는법
+p2p daemon 에서 sync_info 확인 start_mining 으로 채굴 후 
+
+모네로는 wallet 만 password 가 설정가능하고 address에는 따로 password 설정이 없다
+
+송금 API 호출 시 한번에 여러명의 수령인에게 송금이 가능하다
+
+송금 중 mixin 수는 설정 가능 
+>> https://youtu.be/zHN_B_H_fCs
+The mixin count refers to the number of other signatures (aside from yours) in the ring signature 
+that authorizes the transaction. A default mixin of 4 means that there are 5 total signatures. 
+Someone looking at a transaction with a mixin of 4 has no way of knowing which of the five signers is the true sender (source).
+
+모네로 test data
+
+api 
+https://docs.google.com/spreadsheets/d/19qBHVCTjjXOv1jYa2vihJguBEhbtFqXAl0hFptDWb64/edit?usp=sharing
+
+1. 송금
+http://192.168.0.26:8401/api
+
+Content-Type application/json
+
+{
+	"coinname":"mon"
+	, "command":"withdrawalcoin"
+	, "data" : [
+		{"amount":100000000,"address":"9wNgSYy2F9qPZu7KBjvsFgZLTKE2TZgEpNFbGka9gA5zPmAXS35QzzYaLKJRkYTnzgArGNX7TvSqZC87tBLwtaC5RQgJ8rm"}
+		,{"amount":200000000,"address":"9vH5D7Fv47mbpCpdcthcjU34rqiiAYRCh1tYywmhqnEk9iwCE9yppgNCXAyVHG5qJt2kExa42TuhzQfJbmbpeGLkVbg8xit"}]
+}
+
+
+
+set refresh-from-block-height 1
+rescan_bc
+
+start_mining on p2p daemon
+sync_info 로 sync 확인
+4set refresh-from-block-height 1
+rescan_bc
+
+start_mining 9wR4Bk38gNoAJy27BHqEZ9jfwt9PY5efy1HoTmUMDxUmJDgcX34T5HdGwVvESQaKTTcRvoaSKUrf3HfEqCKvp71ZNLUQucd 30
+
+monerod --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18081 --confirm-external-bind --log-file monerod.log --db-sync-mode fast:async:1000 --data-dir D:\monero --testnet
+
+monero-wallet-cli --password banco --daemon-host localhost --trusted-daemon --allow-mismatched-daemon-version --daemon-port 18081 --non-deterministic --shared-ringdb-dir D:\monero\t_ringdb --testnet
+
+monero-wallet-rpc --rpc-bind-ip 0.0.0.0 --rpc-bind-port 18082 --log-level 4 --disable-rpc-login --confirm-external-bind --daemon-port 18081 --trusted-daemon --password banco --shared-ringdb-dir D:\monero\t_ringdb --testnet --wallet-file finally --wallet-dir D:\monero\t_wallets
+
+
+monero 재시작시 data.dmb 정리 필요
+api 요청 시 open wallet 후 get balance 할때 timeout 준다 (
